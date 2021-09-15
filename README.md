@@ -146,6 +146,142 @@ spec:
 - you may want to prevent watching certain resources with the `--resources-to-ignore` flag
 - you can configure logging in JSON format with the `--log-format=json` option
 
+## 部署注意：
+```
+其中有的对象写了namespace为default，有的没写，如果部署到其它namespace可能有bug，因为有些对象还是被部署到了default，对
+部署的目录要进行检查，如果部署到其它namespace，要统一修改一些namespace，然后权限问题在测试的时候可以弄一个比较大的clusterrolebinding，如下：
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: stakater-reloader
+subjects:
+- kind: ServiceAccount
+  name: stakater-reloader
+  namespace: reload
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+```
+
+## example
+```
+// kubectl create ns reload-test
+// kubectl apply -f reload-test.yaml -n reload-test
+
+// reload-test.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: configmap-reload
+  name: configmap-reload-cm
+data:
+  test.ini: |-
+    key: a
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  annotations:
+    configmap.reloader.stakater.com/reload: configmap-reload-cm
+  name: configmap-reload
+  labels:
+    app: configmap-reload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: configmap-reload
+  template:
+    metadata:
+      labels:
+        app: configmap-reload
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: configmap-reload-cm
+      containers:
+      - name: configmap-reload
+        image: 'iyacontrol/configmap-reload:v0.1'
+        command:
+          - configmap-reload
+        args:
+          - -l
+          - debug
+          - -p 
+          - /etc/test/  
+          - -c 
+          - '200' 
+          - -u 
+          - https://www.baidu.com
+        volumeMounts:
+        - name: config
+          mountPath: /etc/test/
+        imagePullPolicy: Always
+
+// old pod
+[root@10-54-156-181 reloader]# k get pod -n reload-test
+NAME                                READY   STATUS    RESTARTS   AGE
+configmap-reload-684f6ffb68-wp8w5   1/1     Running   0          31m
+
+// edit our cm
+[root@10-54-156-181 reloader]# k edit cm configmap-reload-cm -n reload-test
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+data:
+  # change the key
+  test.ini: 'key: It had changed, be reload successfully'
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"test.ini":"key: a"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app":"configmap-reload"},"name":"configmap-reload-cm","namespace":"reload-test"}}
+  creationTimestamp: "2021-09-15T07:53:41Z"
+  labels:
+    app: configmap-reload
+  name: configmap-reload-cm
+  namespace: reload-test
+  resourceVersion: "5331653"
+  selfLink: /api/v1/namespaces/reload-test/configmaps/configmap-reload-cm
+  uid: c2f8cf99-0b34-4f0f-ac53-95eba1f5e75c
+  
+configmap/configmap-reload-cm edited
+
+// 查看到已经触发reload了
+[root@10-54-156-181 reloader]# k get pod -n reload-test
+NAME                                READY   STATUS              RESTARTS   AGE
+configmap-reload-684f6ffb68-wp8w5   1/1     Running             0          31m
+configmap-reload-d6b4f56df-96sv2    0/1     ContainerCreating   0          1s
+
+[root@10-54-156-181 reloader]# k get pod -n reload-test 
+NAME                                READY   STATUS        RESTARTS   AGE
+configmap-reload-684f6ffb68-wp8w5   1/1     Terminating   0          31m
+configmap-reload-d6b4f56df-96sv2    1/1     Running       0          8s
+
+^C[root@10-54-156-181 reloader]# k get pod -n reload-test
+NAME                                READY   STATUS        RESTARTS   AGE
+configmap-reload-684f6ffb68-wp8w5   0/1     Terminating   0          32m
+configmap-reload-d6b4f56df-96sv2    1/1     Running       0          46s
+
+[root@10-54-156-181 reloader]# k get pod -n reload-test
+NAME                               READY   STATUS    RESTARTS   AGE
+configmap-reload-d6b4f56df-96sv2   1/1     Running   0          50s
+
+// reload完成后，登陆新的pod，查看到挂到pod到内容已经变成新的了
+[root@10-54-156-181 reloader]# k exec -it configmap-reload-d6b4f56df-96sv2 sh -n reload-test
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+/ # cat /etc/test/test.ini
+key: It had changed, be reload successfully/ #
+```
+
 ## Deploying to Kubernetes
 
 You can deploy Reloader by following methods:
