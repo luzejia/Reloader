@@ -149,7 +149,7 @@ spec:
 ## 部署注意：
 ```
 其中有的对象写了namespace为default，有的没写，如果部署到其它namespace可能有bug，因为有些对象还是被部署到了default，对
-部署的目录要进行检查，如果部署到其它namespace，要统一修改一些namespace，然后权限问题在测试的时候可以弄一个比较大的clusterrolebinding，如下：
+部署的目录要进行检查，如果部署到其它namespace，要统一修改一些namespace，然后权限问题在测试的时候可以弄一个权限比较大的clusterrolebinding，如下：
 
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
