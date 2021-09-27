@@ -148,21 +148,7 @@ spec:
 
 ## 部署注意：
 ```
-其中有的对象写了namespace为default，有的没写，如果部署到其它namespace可能有bug，因为有些对象还是被部署到了default，对
-部署的目录要进行检查，如果部署到其它namespace，要统一修改一些namespace，然后权限问题在测试的时候可以弄一个权限比较大的clusterrolebinding，如下：
-
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: stakater-reloader
-subjects:
-- kind: ServiceAccount
-  name: stakater-reloader
-  namespace: reload
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin
-  apiGroup: rbac.authorization.k8s.io
+部署文件默认为部署到default namespac，如果要修改为其它namespace记得修改全面，包括：clusterrolebinding中指定的sa的ns也要改
 ```
 
 ## example
