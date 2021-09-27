@@ -272,7 +272,7 @@ key: It had changed, be reload successfully/ #
 
 You can deploy Reloader by following methods:
 
-### Vanilla Manifests
+### Vanilla Manifests（记得修改url中的stakater仓库为luzejia仓库，luzejia仓库下的yaml做了更全面的一键化部署修改）
 
 You can apply vanilla manifests by changing `RELEASE-NAME` placeholder provided in manifest with a proper value and apply it by running the command given below:
 
