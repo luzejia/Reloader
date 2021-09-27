@@ -268,11 +268,13 @@ kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future versi
 key: It had changed, be reload successfully/ #
 ```
 
-## Deploying to Kubernetes
+## Deploying to Kubernetes（记得修改url中的stakater仓库为luzejia仓库，luzejia仓库下的yaml做了更全面的一键化部署修改）
 
+> 记得修改url中的stakater仓库为luzejia仓库，luzejia仓库下的yaml做了更全面的一键化部署修改!!!
+> 
 You can deploy Reloader by following methods:
 
-### Vanilla Manifests（记得修改url中的stakater仓库为luzejia仓库，luzejia仓库下的yaml做了更全面的一键化部署修改）
+### Vanilla Manifests
 
 You can apply vanilla manifests by changing `RELEASE-NAME` placeholder provided in manifest with a proper value and apply it by running the command given below:
 
