@@ -278,6 +278,9 @@ You can deploy Reloader by following methods:
 
 You can apply vanilla manifests by changing `RELEASE-NAME` placeholder provided in manifest with a proper value and apply it by running the command given below:
 
+> 这个默认是在default ns下的，如果你要换其它ns部署，记得不能直接kubectl xx -n newNamespace，因为有些文件里面写了ns，有些没有，这样会导致部署后一部分在default，一部分在你的ns，导致出错。
+> 并且修改的时候要注意原版yaml中像clusterrolebinding对象中的sa是指定了default，你要改其它ns记得要一起改掉
+
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/stakater/Reloader/master/deployments/kubernetes/reloader.yaml
 ```
